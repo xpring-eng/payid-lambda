@@ -217,6 +217,13 @@ Resources:
     Properties:
       AccessControl: Private
       BucketName: !Ref "payIdBucketName"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
 
 Outputs:
   apiGatewayBaseURL:
