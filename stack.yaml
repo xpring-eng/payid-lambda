@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "My API Gateway and Lambda function"
+Description: "PayID Lambda Server and API Gateway front end"
 
 Parameters:
   apiGatewayStageName:
@@ -112,7 +112,7 @@ Resources:
               const payId = event.pathParameters.payId;
               try {
                   const params = {
-                      Bucket: 'payid-server-resources',
+                      Bucket: process.env.PAYID_BUCKET,
                       Key: `${payId}.json`,
                   };
                   const payIdResource = await s3.getObject(params).promise();
@@ -145,6 +145,9 @@ Resources:
               }
           };
       Description: "PayID Server"
+      Environment:
+        Variables:
+          PAYID_BUCKET: !Ref "payIdBucketName"
       FunctionName: !Ref "lambdaFunctionName"
       Handler: "index.handler"
       MemorySize: 128
@@ -216,6 +219,12 @@ Resources:
       BucketName: !Ref "payIdBucketName"
 
 Outputs:
+  apiGatewayBaseURL:
+    Value: !Sub "https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/"
+
+  apiGatewayReleaseStageName:
+    Value: !Ref "apiGatewayStageName"
+
   apiGatewayInvokeURL:
     Value: !Sub "https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/${apiGatewayStageName}"
 
