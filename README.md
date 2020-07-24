@@ -3,6 +3,7 @@
 Ready to get started with your own PayID server on AWS Lambda?
 
 You'll need:
+* an AWS account
 * a domain you want to use for your Pay IDs
 * a certificate imported into Amazon Certificate Manager (you'll need the ARN to pass to the stack)
 * to update your domain to use Amazon's name servers in the Route53 hosted zone that's created for you
