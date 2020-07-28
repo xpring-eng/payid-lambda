@@ -5,8 +5,8 @@ Ready to get started with your own PayID server on AWS Lambda?
 You'll need:
 * an AWS account.
 * a domain you want to use for your Pay IDs.
-* a certificate imported into Amazon Certificate Manager in the `us-east-1` region. (you'll need the ARN to pass to the stack)
-* to update your domain to use Amazon's name servers in the Route53 hosted zone that's created for you.
+* [a certificate imported into Amazon Certificate Manager in the `us-east-1` region](#how-do-i-get-a-certificate-in-amazon-certificate-manager). (you'll need the ARN to pass to the stack)
+* __after the stack is added__, you'll have to update your domain to use Amazon's name servers in the Route53 hosted zone that's created for you.
 
 If you have the domain and certificate, and you're okay with using Amazon's name servers, then click the button below to get started. 
 
@@ -58,3 +58,28 @@ Now you'll just have to wait for ACM to see the `CNAME` you added and issue the 
 ### Step 8: Copy the certificate ARN for use with this CloudFormation stack
 
 ![certificate arn](./help-images/cert/request-cert-step-8.png)
+
+## How do I update my domain's nameservers for my PayID domain?
+
+Once you have finished creating the CloudFormation Stack using our template, you'll need to update your nameserver settings on your registrar to use Amazon's. 
+
+### Step 1: Go to Route53 in the AWS console and click on your hosted zone
+
+Link to Route53:
+https://console.aws.amazon.com/route53/v2/hostedzones
+
+Once you're on this page, click on the domain you used in the stack template (in this example, `somedomainyouown.com`):
+
+![hosted zones](./help-images/nameservers/hosted-zone-list.png)
+
+### Step 2: Find the nameservers
+
+Clicking on the hosted zone will display the nameservers you need to use with your registrar:
+
+![hosted zone nameservers](./help-images/nameservers/hosted-zone-nameservers.png)
+
+### Step 3: Update your registrar with Amazon's nameservers
+
+Paste the values you saw in the previous step into wherever your registrar allows you to change them. For example:
+
+![registrar nameservers](./help-images/nameservers/registrar-nameservers.png)
