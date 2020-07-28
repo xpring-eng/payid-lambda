@@ -6,7 +6,7 @@ You'll need:
 * an AWS account.
 * a domain you want to use for your Pay IDs.
 * [a certificate imported into Amazon Certificate Manager in the `us-east-1` region](#how-do-i-get-a-certificate-in-amazon-certificate-manager). (you'll need the ARN to pass to the stack)
-* __after the stack is added__, you'll have to update your domain to use Amazon's name servers in the Route53 hosted zone that's created for you.
+* __after the stack is added__, you'll have [to update your domain to use Amazon's name servers in the Route53 hosted zone that's created for you](#how-do-i-update-my-domains-nameservers-for-my-payid-domain).
 
 If you have the domain and certificate, and you're okay with using Amazon's name servers, then click the button below to get started. 
 
