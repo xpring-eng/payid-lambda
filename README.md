@@ -10,5 +10,5 @@ You'll need:
 
 If you have the domain and certificate, and you're okay with using Amazon's name servers, then click the button below to get started. 
 
-[![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-west-1.console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?templateURL=https://raw.githubusercontent.com/xpring-eng/payid-lambda/master/payid-stack.yaml?token=AAKSGXLGFNK7LYBIJL53QH27ENQVO&stackName=my-payid-server)
+[![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-west-1.console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?templateURL=https://payid-server-template.s3-us-west-2.amazonaws.com/payid-stack.yaml&stackName=my-payid-server)
 
