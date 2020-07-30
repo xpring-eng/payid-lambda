@@ -93,3 +93,61 @@ Clicking on the hosted zone will display the nameservers you need to use with yo
 Paste the values you saw in the previous step into wherever your registrar allows you to change them. For example:
 
 ![registrar nameservers](./help-images/nameservers/registrar-nameservers.png)
+
+
+## Launching using scripts
+
+Several scripts are provided to make it simple to request a AWS certificate for your payid domain and launch the payid
+lambda stack on your domain.
+- [request-certificate.sh](request-certificate.sh) - to request a certificate via AWS certificate manager for a given domain.
+- [create-stack.sh](create-stack.sh) - to create the PayID lambda stack on your account for a given domain.
+
+### Prequisites
+
+- AWS cli must be installed (see https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+- `aws configure` must have been configured with an Access Key created via https://console.aws.amazon.com/iam/home?region=us-east-1#/security_credentials
+- You must have a domain and the ability to configure DNS for your domain. 
+
+### Usage
+
+#### Requesting a certificate
+
+Commamd: `./request-certificate.sh <domain-name>`
+
+Example:
+```
+$ ./request-certificate.sh hodl.payid.ml
+
+Requesting certificate for hodl.payid.ml
+Certificate requested. Please create the following CNAME record for your domain:
+_09dee7696e4d458fb16fead080465035.hodl.payid.ml.	CNAME	_b1fddaad4657f8e03167be7b61dc3685.jfrzftwwjs.acm-validations.aws.
+```
+
+Once the certificate request is completed, create the CNAME for your domain as specified in the output.
+
+Wait for AWS Certificate Manager to issue your certificate before proceeding to the next command.
+
+#### Launching the PayID Lambda stack
+
+Commamd: `./create-stack.sh <domain-name>`
+
+Example:
+```
+$ ./create-stack.sh hodl.payid.ml
+
+Creating stack hodl-payid-ml-payid-stack in AWS...
+
+Waiting for changeset to be created..
+Waiting for stack create/update to complete
+Successfully created/updated stack - hodl-payid-ml-payid-stack
+
+Created successfully
+Please update the Nameservers for your domain to
+nameserver1	ns-1288.awsdns-33.org
+nameserver2	ns-852.awsdns-42.net
+nameserver3	ns-1593.awsdns-07.co.uk
+nameserver4	ns-8.awsdns-01.com
+```
+
+Once completed, update the nameservers for your domain to the ones specified in the output.
+
