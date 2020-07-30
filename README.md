@@ -134,6 +134,7 @@ Commamd: `./create-stack.sh <domain-name>`
 Example:
 ```
 $ ./create-stack.sh hodl.payid.ml
+
 Creating stack hodl-payid-ml-payid-stack in AWS...
 
 Waiting for changeset to be created..
