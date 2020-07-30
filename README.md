@@ -5,10 +5,10 @@ Ready to get started with your own PayID server on AWS Lambda?
 You'll need:
 * an AWS account.
 * a domain you want to use for your Pay IDs.
-* [a certificate imported into Amazon Certificate Manager in the `us-east-1` region](#how-do-i-get-a-certificate-in-amazon-certificate-manager). (you'll need the ARN to pass to the stack)
+* [a certificate imported into Amazon Certificate Manager in the `us-east-1` region](#how-do-i-get-a-certificate-in-amazon-certificate-manager). 
 * __after the stack is added__, you'll have [to update your domain to use Amazon's name servers in the Route53 hosted zone that's created for you](#how-do-i-update-my-domains-nameservers-for-my-payid-domain).
 
-Here's an example of what the form looks like, along with some hints about the data you'll need for the required fields.
+Here's an example of what the form looks like: all you'll need is the domain you want to use for Pay IDs.
 
 ![stack form](./help-images/stack-form.png)
 
@@ -67,7 +67,13 @@ Now you'll just have to wait for ACM to see the `CNAME` you added and issue the 
 
 Once you have finished creating the CloudFormation Stack using our template, you'll need to update your nameserver settings on your registrar to use Amazon's. 
 
-### Step 1: Go to Route53 in the AWS console and click on your hosted zone
+### Step 1: View the nameservers in the stack output, or go to Route53 in the AWS console and click on your hosted zone
+
+If you're still on the CloudFormation page looking at the stack, the `Outputs` tab will list the nameservers you need to use.
+
+![stack outputs](./help-images/nameservers/stack-outputs.png)
+
+If you've already closed the tab or navigated away, you can find the same information in Route53.
 
 Link to Route53:
 https://console.aws.amazon.com/route53/v2/hostedzones
