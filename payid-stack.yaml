@@ -7,11 +7,84 @@ Parameters:
     AllowedPattern: "^[a-z0-9.]+$"
     Description: "A domain that you can manage which you want your Pay IDs to be hosted at."
 
-  certificateArn:
-    Type: "String"
-    Description: "Needs to be the ARN of a certificate in Amazon Certificate Manager in us-east-1."
-
 Resources:
+  listCertificatesFn:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const response = require('cfn-response');
+
+          const acm = new AWS.ACM({region: 'us-east-1'});
+
+          exports.handler =  function(event, context) {
+
+              acm.listCertificates({}, (err, data) => {
+                  if (err) {
+                      console.log(err);
+                      response.send(event, context, response.FAILURE, {});
+                      return;
+                  }
+                  const cert = data.CertificateSummaryList.find(c => c.DomainName === process.env.PAYID_DOMAIN);
+                  console.log('found cert arn', cert.CertificateArn);
+                  response.send(event, context, response.SUCCESS, { payIdCertArn: cert.CertificateArn });
+              });
+
+          };
+      Description: "Certificate lister for CloudFormation"
+      Environment:
+        Variables:
+          PAYID_DOMAIN: !Ref "domainName"
+      Handler: "index.handler"
+      MemorySize: 128
+      Role: !GetAtt "listCertificatesLambdaIAMRole.Arn"
+      Runtime: "nodejs12.x"
+      Timeout: 10
+
+  listCertificatesLambdaIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Effect: "Allow"
+                Resource: !GetAtt "listCertificatesLambdaLogGroup.Arn"
+          PolicyName: "list-certificates-logs"
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "acm:ListCertificates"
+                Effect: "Allow"
+                Resource:
+                  - "*"
+          PolicyName: "list-certificates-acm-role"
+
+  listCertificatesLambdaLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      RetentionInDays: 90
+
+  listCertificates:
+    Type: "Custom::listCertificatesFn"
+    Properties:
+      ServiceToken: !GetAtt "listCertificatesFn.Arn"
+
   apiGateway:
     Type: "AWS::ApiGateway::RestApi"
     Properties:
@@ -66,13 +139,15 @@ Resources:
   apiGatewayCustomDomain:
     Type: "AWS::ApiGateway::DomainName"
     Properties:
-      CertificateArn: !Ref "certificateArn"
+      CertificateArn: !GetAtt "listCertificates.payIdCertArn"
       DomainName: !Ref "domainName"
       SecurityPolicy: "TLS_1_2"
 
   apiGatewayDomainResourceMapping:
     Type: "AWS::ApiGateway::BasePathMapping"
-    DependsOn: "apiGatewayDeployment"
+    DependsOn:
+    - "apiGatewayDeployment"
+    - "apiGatewayCustomDomain"
     Properties:
       DomainName: !Ref "domainName"
       RestApiId: !Ref "apiGateway"
@@ -352,3 +427,15 @@ Outputs:
 
   lambdaArn:
     Value: !GetAtt "payIdServerLambdaFunction.Arn"
+
+  nameserver1:
+    Value: !Select [0, !GetAtt "hostedZone.NameServers"]
+
+  nameserver2:
+    Value: !Select [1, !GetAtt "hostedZone.NameServers"]
+
+  nameserver3:
+    Value: !Select [2, !GetAtt "hostedZone.NameServers"]
+
+  nameserver4:
+    Value: !Select [3, !GetAtt "hostedZone.NameServers"]
