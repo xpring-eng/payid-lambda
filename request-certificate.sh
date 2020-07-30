@@ -31,7 +31,7 @@ fi
 # seems like there is a second delay before the cert can be queried
 sleep 5
 
-RECORD=`aws acm describe-certificate --certificate-arn $ARN --output text | grep RESOURCERECORD | cut -f 2-`
+RECORD=`aws acm describe-certificate --certificate-arn $ARN --region us-east-1 --output text | grep RESOURCERECORD | cut -f 2-`
 
 if [ $? != 0 ]; then
   echo "${bold}Failed to lookup resource record for certificate${normal}"

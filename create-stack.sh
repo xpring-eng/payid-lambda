@@ -29,7 +29,7 @@ if [ -z $ARN  ]; then
 fi
 
 
-RECORD=`aws acm describe-certificate --certificate-arn $ARN --output table | grep Status | grep ISSUED`
+RECORD=`aws acm describe-certificate --certificate-arn $ARN --output table  --region us-east-1 | grep Status | grep ISSUED`
 
 if [ $? != 0 ]; then
   echo "${bold}Certificate for $DOMAIN has been requested but not issued yet by AWS certificate manager.${normal}"
