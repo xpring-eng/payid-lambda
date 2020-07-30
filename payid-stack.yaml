@@ -2,27 +2,19 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "PayID Lambda Server and API Gateway front end"
 
 Parameters:
-  apiGatewayStageName:
-    Type: "String"
-    AllowedPattern: "^[a-z0-9]+$"
-    Default: "release"
-
   lambdaFunctionName:
     Type: "String"
     AllowedPattern: "^[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+$"
     Default: "payid-server"
 
-  payIdBucketName:
-    Type: "String"
-    AllowedPattern: "^[a-z0-9-]+$"
-    Default: "payid-server-resources"
-
   domainName:
     Type: "String"
     AllowedPattern: "^[a-z0-9.]+$"
+    Description: "A domain that you can manage which you want your Pay IDs to be hosted at."
 
   certificateArn:
     Type: "String"
+    Description: "Needs to be the ARN of a certificate in Amazon Certificate Manager in us-east-1."
 
 Resources:
   apiGateway:
@@ -74,7 +66,7 @@ Resources:
       - "apiGatewayRootMethod"
     Properties:
       RestApiId: !Ref "apiGateway"
-      StageName: !Ref "apiGatewayStageName"
+      StageName: "release"
 
   apiGatewayCustomDomain:
     Type: "AWS::ApiGateway::DomainName"
@@ -89,7 +81,77 @@ Resources:
     Properties:
       DomainName: !Ref "domainName"
       RestApiId: !Ref "apiGateway"
-      Stage: !Ref "apiGatewayStageName"
+      Stage: "release"
+
+  s3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  writeTestAccountToS3Fn:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const response = require('cfn-response');
+
+          const s3 = new AWS.S3();
+
+          exports.handler =  function(event, context) {
+
+              const testAccount = {
+                  addresses: [
+                      {
+                          paymentNetwork: "XRPL",
+                          environment: "TESTNET",
+                          addressDetailsType: "CryptoAddressDetails",
+                          addressDetails: {
+                              address: "T772A73My52QaUonaai6VE4X98zLu7VBQSXJKLYimjXDAJi"
+                          }
+                      }
+                  ],
+                  payId: `testaccount$${process.env.PAYID_DOMAIN}`
+              };
+
+                  const params = {
+                      Bucket: process.env.PAYID_BUCKET,
+                      Key: 'testaccount.json',
+                      Body: JSON.stringify(testAccount),
+                      ContentType: "application/json"
+                  };
+
+                  console.log('creating test account');
+                  s3.putObject(params).promise().then(() => {
+                      console.log('test account created');
+                      response.send(event, context, response.SUCCESS, {});
+                  }).catch((error) => {
+                      console.log(error);
+                      response.send(event, context, response.FAILURE, {});
+                  });
+          };
+      Description: "PayID Test Account Generator"
+      Environment:
+        Variables:
+          PAYID_BUCKET: !Ref "s3Bucket"
+          PAYID_DOMAIN: !Ref "domainName"
+      Handler: "index.handler"
+      MemorySize: 128
+      Role: !GetAtt "lambdaIAMRole.Arn"
+      Runtime: "nodejs12.x"
+      Timeout: 10
+
+  writeTestAccountToS3:
+    Type: "Custom::writeTestAccountToS3Fn"
+    Properties:
+      ServiceToken: !GetAtt "writeTestAccountToS3Fn.Arn"
 
   lambdaFunction:
     Type: "AWS::Lambda::Function"
@@ -169,7 +231,7 @@ Resources:
       Description: "PayID Server"
       Environment:
         Variables:
-          PAYID_BUCKET: !Ref "payIdBucketName"
+          PAYID_BUCKET: !Ref "s3Bucket"
       FunctionName: !Ref "lambdaFunctionName"
       Handler: "index.handler"
       MemorySize: 128
@@ -250,28 +312,12 @@ Resources:
             DNSName: !GetAtt "apiGatewayCustomDomain.DistributionDomainName"
             HostedZoneId: !GetAtt "apiGatewayCustomDomain.DistributionHostedZoneId"
 
-  s3Bucket:
-    Type: "AWS::S3::Bucket"
-    Properties:
-      AccessControl: Private
-      BucketName: !Ref "payIdBucketName"
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-
 Outputs:
   apiGatewayBaseURL:
     Value: !Sub "https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/"
 
-  apiGatewayReleaseStageName:
-    Value: !Ref "apiGatewayStageName"
-
   apiGatewayInvokeURL:
-    Value: !Sub "https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/${apiGatewayStageName}"
+    Value: !Sub "https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/release"
 
   lambdaArn:
     Value: !GetAtt "lambdaFunction.Arn"
