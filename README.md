@@ -115,7 +115,7 @@ lambda stack on your domain.
 Commamd: `./request-certificate.sh <domain-name>`
 
 Example:
-```shell script
+```
 $ ./request-certificate.sh hodl.payid.ml
 
 Requesting certificate for hodl.payid.ml
@@ -132,7 +132,7 @@ Wait for AWS Certificate Manager to issue your certificate before proceeding to 
 Commamd: `./create-stack.sh <domain-name>`
 
 Example:
-```shell script
+```
 $ ./create-stack.sh hodl.payid.ml
 Creating stack hodl-payid-ml-payid-stack in AWS...
 
