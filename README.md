@@ -16,6 +16,8 @@ If you have the domain and certificate, and you're okay with using Amazon's name
 
 [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-west-1.console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?templateURL=https://payid-server-template.s3-us-west-2.amazonaws.com/payid-stack.yaml&stackName=my-payid-server)
 
+If you'd prefer to use the AWS command line to create your stack, we have scripts to make your life easier. [Check out our instructions for using them.](#launching-using-scripts)
+
 ## How do I get a certificate in Amazon Certificate Manager?
 
 Note: this is a set of instructions known to work by those who created this stack, but there are likely other ways of importing a certificate. This guide only seeks to show the steps for the one used during our development of this CloudFormation stack.
