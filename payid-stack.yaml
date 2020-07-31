@@ -63,7 +63,7 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Effect: "Allow"
-                Resource: !GetAtt "listCertificatesLambdaLogGroup.Arn"
+                Resource: "*"
           PolicyName: "list-certificates-logs"
         - PolicyDocument:
             Version: "2012-10-17"
@@ -74,11 +74,6 @@ Resources:
                 Resource:
                   - "*"
           PolicyName: "list-certificates-acm-role"
-
-  listCertificatesLambdaLogGroup:
-    Type: "AWS::Logs::LogGroup"
-    Properties:
-      RetentionInDays: 90
 
   listCertificates:
     Type: "Custom::listCertificatesFn"
@@ -239,7 +234,7 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Effect: "Allow"
-                Resource: !GetAtt "testAccountLambdaLogGroup.Arn"
+                Resource: "*"
           PolicyName: "create-test-account-logs"
         - PolicyDocument:
             Version: "2012-10-17"
@@ -251,11 +246,6 @@ Resources:
                   - "*"
           PolicyName: "create-test-account-s3"
 
-
-  testAccountLambdaLogGroup:
-    Type: "AWS::Logs::LogGroup"
-    Properties:
-      RetentionInDays: 90
 
   writeTestAccountToS3:
     Type: "Custom::writeTestAccountToS3Fn"
@@ -271,10 +261,7 @@ Resources:
 
           const s3 = new AWS.S3();
 
-          const networkHeaders = [
-              'application/xrpl-testnet+json',
-              'application/xrpl-mainnet+json',
-          ];
+          const allAddressesHeader = 'application/payid+json'
 
           const responseHeaders = {
               'Access-Control-Allow-Origin': '*',
@@ -284,15 +271,38 @@ Resources:
               'Cache-Control': 'no-store',
           };
 
-          const success = {
+          const successResponse = {
               statusCode: 200,
               headers: responseHeaders,
           };
 
+          const notFoundResponse = {
+              statusCode: 404,
+          }
+
+          // From payid/services/headers.ts
+          // This will throw if the regex doesn't match.
+          function parseAcceptHeader(acceptHeader) {
+              const ACCEPT_HEADER_REGEX = /^(?:application\/)(?<paymentNetwork>\w+)-?(?<environment>\w+)?(?:\+json)$/u
+              // TODO (tedkalaw): Support content negotiation?
+              // From payid/services/headers.ts
+              const lowerCaseMediaType = acceptHeader.toLowerCase();
+              const regexResult = ACCEPT_HEADER_REGEX.exec(lowerCaseMediaType);
+              return {
+                  mediaType: lowerCaseMediaType,
+                  // Optionally returns the environment (only if it exists)
+                  ...(regexResult && regexResult.groups && regexResult.groups.environment && {
+                      environment: regexResult.groups.environment.toUpperCase(),
+                  }),
+                  paymentNetwork: regexResult && regexResult.groups && regexResult.groups.paymentNetwork.toUpperCase(),
+              }
+          }
+
           exports.handler =  async function(event, context) {
               if (event.path === '/') {
-                  return { ...success, body: 'Welcome to PayID!' };
+                  return { ...successResponse, body: 'Welcome to PayID!' };
               }
+
 
               const payIdVersionHeader = event.headers['PayID-Version'];
               if (payIdVersionHeader && payIdVersionHeader !== '1.0') {
@@ -303,38 +313,71 @@ Resources:
               }
 
               const payId = event.pathParameters.payId;
+              const fullPayId = `${payId}$${process.env.PAYID_DOMAIN}`
+
               try {
                   const params = {
-                      Bucket: process.env.PAYID_BUCKET,
+                      Bucket: `${process.env.PAYID_BUCKET}`,
                       Key: `${payId}.json`,
                   };
                   const payIdResource = await s3.getObject(params).promise();
-
                   const payIdJson = JSON.parse(payIdResource.Body.toString());
 
-                  const accept = event.headers.Accept;
-                  if (networkHeaders.indexOf(accept) !== -1) {
-                      const networkHeader = accept.substring('application/'.length);
-                      const network = networkHeader.substring(0, networkHeader.indexOf('-'));
-                      const environment = networkHeader.substring(network.length + 1, networkHeader.indexOf('+'));
-                      const selectedAddress = payIdJson.addresses
-                          .find(a => a.paymentNetwork === network.toUpperCase() && a.environment === environment.toUpperCase());
-                      if (selectedAddress) {
-                          return { ...success, body: JSON.stringify(selectedAddress) };
-                      }
+                  const acceptHeader = event.headers.Accept;
+                  if (!acceptHeader || acceptHeader === allAddressesHeader) {
                       return {
-                          statusCode: 404,
-                          body: `No address for ${accept} available for PayID ${payId}`,
+                          ...successResponse,
+                          body: JSON.stringify({
+                              addresses: payIdJson.addresses,
+                              payId: fullPayId
+                          })
+                      }
+                  }
+
+                  const {paymentNetwork, environment} = parseAcceptHeader(acceptHeader);
+
+                  if (!paymentNetwork && !environment) {
+                      return {
+                          ...successResponse,
+                          body: JSON.stringify({
+                              addresses: payIdJson.addresses,
+                              payId: fullPayId
+                          })
+                      }
+                  }
+
+                  const selectedAddress = payIdJson.addresses
+                      .find(a => a.paymentNetwork === paymentNetwork
+                          && (!environment || a.environment === environment)
+                      );
+
+                  if (!selectedAddress) {
+                      return {
+                          ...notFoundResponse,
+                          body: JSON.stringify({
+                              ...notFoundResponse,
+                              error: 'Not found',
+                              message: `Payment information for ${payId}$${process.env.PAYID_DOMAIN} could not be found.`,
+                          })
                       };
                   }
-                  return { ...success, body: JSON.stringify(payIdJson) };
-              } catch (error) {
-                  console.log(error);
-                  const response = {
-                      statusCode: 404,
-                      body: 'PayID resource not found',
+
+                  return {
+                      ...successResponse,
+                      body: JSON.stringify({
+                          addresses: [selectedAddress],
+                          payId: fullPayId
+                      })
                   };
-                  return response;
+              } catch (error) {
+                  console.error('Uncaught exception handling PayID request', error);
+                  return {
+                      ...notFoundResponse,
+                      body: JSON.stringify({
+                          ...notFoundResponse,
+                          message: 'PayID resource not found',
+                      })
+                  };
               }
           };
       Description: "PayID Server"
@@ -385,7 +428,7 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Effect: "Allow"
-                Resource: !GetAtt "lambdaLogGroup.Arn"
+                Resource: "*"
           PolicyName: "payid-server-logs"
         - PolicyDocument:
             Version: "2012-10-17"
@@ -396,12 +439,6 @@ Resources:
                 Resource:
                   - "*"
           PolicyName: "payid-server-s3"
-
-
-  lambdaLogGroup:
-    Type: "AWS::Logs::LogGroup"
-    Properties:
-      RetentionInDays: 90
 
   hostedZone:
     Type: "AWS::Route53::HostedZone"
