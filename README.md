@@ -160,3 +160,28 @@ nameserver4	ns-8.awsdns-01.com
 ```
 
 Once completed, update the nameservers for your domain to the ones specified in the output.
+
+## How do I add PayIDs?
+
+When the stack is created, an S3 bucket titled `{name of stack}-s3bucket-{unique hash}` is created.
+
+PayIDs can be added to this bucket by uploading `json` files to the bucket, each of which contains a single user that conforms to [the PayID schema](https://docs.payid.org/payid-schemas#example-single-user-schema). You can upload new files to the bucket via https://s3.console.aws.amazon.com/s3/buckets/.
+
+A test account is provided on creation at `testaccount.json`:
+
+```
+{
+    "addresses":[
+        {
+            "paymentNetwork":"XRPL",
+            "environment":"TESTNET",
+            "addressDetailsType":"CryptoAddressDetails",
+            "addressDetails":{
+                "address":"T772A73My52QaUonaai6VE4X98zLu7VBQSXJKLYimjXDAJi"
+            }
+        }
+    ]
+}
+```
+
+The name of the file is used to resolve the PayID - `testaccount.json` will be resolved by `mydomain.tld/testaccount`.
