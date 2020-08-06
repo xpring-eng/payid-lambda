@@ -3,17 +3,18 @@
 Ready to get started with your own PayID server on AWS Lambda?
 
 You'll need:
-* an AWS account.
-* a domain you want to use for your PayIDs.
-* [a certificate imported into Amazon Certificate Manager in the `us-east-1` region](#how-do-i-get-a-certificate-in-amazon-certificate-manager). 
-* __after the stack is added__, you'll have [to update your domain to use Amazon's name servers in the Route53 hosted zone that's created for you](#how-do-i-update-my-domains-nameservers-for-my-payid-domain).
-* PayIDs can be added by uploading a `json` file to the S3 bucket created by the stack.(#how-do-i-add-payids).
 
-Here's an example of what the form looks like: all you'll need is the domain you want to use for Pay IDs.
+- an AWS account.
+- a domain you want to use for your PayIDs.
+- [a certificate imported into Amazon Certificate Manager in the `us-east-1` region](#how-do-i-get-a-certificate-in-amazon-certificate-manager).
+- **after the stack is added**, you'll have [to update your domain to use Amazon's name servers in the Route53 hosted zone that's created for you](#how-do-i-update-my-domains-nameservers-for-my-payid-domain).
+- PayIDs can be added by uploading a `json` file to the S3 bucket created by the stack.(#how-do-i-add-payids).
+
+Here's an example of what the form looks like: all you'll need is the domain you want to use for PayIDs.
 
 ![stack form](./help-images/stack-form.png)
 
-If you have the domain and certificate, and you're okay with using Amazon's name servers, then click the button below to get started. 
+If you have the domain and certificate, and you're okay with using Amazon's name servers, then click the button below to get started.
 
 [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-west-1.console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?templateURL=https://payid-server-template.s3-us-west-2.amazonaws.com/payid-stack.yaml&stackName=my-payid-server)
 
@@ -25,7 +26,7 @@ Note: this is a set of instructions known to work by those who created this stac
 
 ### Step 1: Open up the Certificate Manager in the AWS console in us-east-1
 
-Note: this __must__ be added in the `us-east-1` region or the CloudFormation will not create your stack/PayID server correctly. The reason for this is that the Lambda uses API Gateway for HTTP access which leverages a Cloudfront distribution for pointing a domain to it, and Cloudfront distributions require ACM certs to exist in `us-east-1.  This is mentioned on the AWS documentation [here](https://docs.aws.amazon.com/acm/latest/userguide/acm-regions.html).
+Note: this **must** be added in the `us-east-1` region or the CloudFormation will not create your stack/PayID server correctly. The reason for this is that the Lambda uses API Gateway for HTTP access which leverages a Cloudfront distribution for pointing a domain to it, and Cloudfront distributions require ACM certs to exist in `us-east-1. This is mentioned on the AWS documentation [here](https://docs.aws.amazon.com/acm/latest/userguide/acm-regions.html).
 
 Link to console:
 https://console.aws.amazon.com/acm/home?region=us-east-1
@@ -35,15 +36,19 @@ https://console.aws.amazon.com/acm/home?region=us-east-1
 ![request a public certificate](./help-images/cert/request-cert-acm-start.png)
 
 ### Step 3: Specify your domain name
+
 ![specify your domain name](./help-images/cert/request-cert-step-1.png)
 
-### Step 4: Choose DNS valication
+### Step 4: Choose DNS validation
+
 ![choose dns validation](./help-images/cert/request-cert-step-2.png)
 
 ### Step 5: Add tags (optional)
+
 ![optionally add tags](./help-images/cert/request-cert-step-3.png)
 
 ### Step 5: Review
+
 ![review](./help-images/cert/request-cert-step-4.png)
 
 ### Step 6: Pending validation and adding a CNAME at your registrar
@@ -68,7 +73,7 @@ Now you'll just have to wait for ACM to see the `CNAME` you added and issue the 
 
 ## How do I update my domain's nameservers for my PayID domain?
 
-Once you have finished creating the CloudFormation Stack using our template, you'll need to update your nameserver settings on your registrar to use Amazon's. 
+Once you have finished creating the CloudFormation Stack using our template, you'll need to update your nameserver settings on your registrar to use Amazon's.
 
 ### Step 1: View the nameservers in the stack output, or go to Route53 in the AWS console and click on your hosted zone
 
@@ -97,11 +102,11 @@ Paste the values you saw in the previous step into wherever your registrar allow
 
 ![registrar nameservers](./help-images/nameservers/registrar-nameservers.png)
 
-
 ## Launching using scripts
 
 Several scripts are provided to make it simple to request a AWS certificate for your payid domain and launch the payid
 lambda stack on your domain.
+
 - [request-certificate.sh](request-certificate.sh) - to request a certificate via AWS certificate manager for a given domain.
 - [create-stack.sh](create-stack.sh) - to create the PayID lambda stack on your account for a given domain.
 
@@ -109,7 +114,7 @@ lambda stack on your domain.
 
 - AWS cli must be installed (see https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 - `aws configure` must have been configured with an Access Key created via https://console.aws.amazon.com/iam/home?region=us-east-1#/security_credentials
-- You must have a domain and the ability to configure DNS for your domain. 
+- You must have a domain and the ability to configure DNS for your domain.
 
 ### Usage
 
@@ -118,6 +123,7 @@ lambda stack on your domain.
 Commamd: `./request-certificate.sh <domain-name>`
 
 Example:
+
 ```
 $ ./request-certificate.sh hodl.payid.ml
 
@@ -135,6 +141,7 @@ Wait for AWS Certificate Manager to issue your certificate before proceeding to 
 Commamd: `./create-stack.sh <domain-name>`
 
 Example:
+
 ```
 $ ./create-stack.sh hodl.payid.ml
 
@@ -153,4 +160,3 @@ nameserver4	ns-8.awsdns-01.com
 ```
 
 Once completed, update the nameservers for your domain to the ones specified in the output.
-
