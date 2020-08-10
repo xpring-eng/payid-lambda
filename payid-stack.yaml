@@ -87,7 +87,7 @@ Resources:
       Description: "API Gateway endpoints to invoke PayID Lambda"
 
   apiGatewayPayIdResource:
-    Type: 'AWS::ApiGateway::Resource'
+    Type: "AWS::ApiGateway::Resource"
     Properties:
       RestApiId: !Ref apiGateway
       ParentId: !GetAtt
@@ -141,8 +141,8 @@ Resources:
   apiGatewayDomainResourceMapping:
     Type: "AWS::ApiGateway::BasePathMapping"
     DependsOn:
-    - "apiGatewayDeployment"
-    - "apiGatewayCustomDomain"
+      - "apiGatewayDeployment"
+      - "apiGatewayCustomDomain"
     Properties:
       DomainName: !Ref "domainName"
       RestApiId: !Ref "apiGateway"
@@ -245,7 +245,6 @@ Resources:
                 Resource:
                   - "*"
           PolicyName: "create-test-account-s3"
-
 
   writeTestAccountToS3:
     Type: "Custom::writeTestAccountToS3Fn"
@@ -362,8 +361,11 @@ Resources:
                       };
                   }
 
+                  const addressFoundResponse = {...successResponse }
+                  addressFoundResponse.headers['Content-Type'] = acceptHeader;
+
                   return {
-                      ...successResponse,
+                      ...addressFoundResponse,
                       body: JSON.stringify({
                           addresses: [selectedAddress],
                           payId: fullPayId
