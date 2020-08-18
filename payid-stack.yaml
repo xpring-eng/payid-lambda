@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "PayID Lambda Server and API Gateway front end"
+Description: "[v1.0] PayID Lambda Server and API Gateway front end"
 
 Parameters:
   domainName:
@@ -479,3 +479,6 @@ Outputs:
 
   nameserver4:
     Value: !Select [3, !GetAtt "hostedZone.NameServers"]
+
+  PayIdLambdaStackVersion:
+    Value: "v1.0"

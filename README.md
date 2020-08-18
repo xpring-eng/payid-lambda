@@ -185,3 +185,17 @@ A test account is provided on creation at `testaccount.json`:
 ```
 
 The name of the file is used to resolve the PayID - `testaccount.json` will be resolved by `mydomain.tld/testaccount`.
+
+## How do I upgrade?
+
+Releases can be found in the [releases tab](https://github.com/xpring-eng/payid-lambda/releases), with the file `payid-stack.yaml` attached. 
+
+The version you have installed will be visible in the description of the stack in CloudFormation (for example, something like `[v1.0] PayID Lambda Server and API Gateway front end`) and also in the `Outputs` of the stack under the name `PayIdLambdaStackVersion`. 
+
+To perform an update, click the `Update` button when viewing the stack and upload the version of `payid-stack.yaml` you want to upgrade to. 
+
+![update button](./help-images/upgrade/update-button.png)
+
+![update button](./help-images/upgrade/update-form.png)
+
+Note: While this will update the Lambda function it could also update other resources as well in the stack, including API Gateway, S3, etc. We'll outline changes in the release notes if other resources are altered, but be sure to look at the changelog for indications that other resources may be impacted.
