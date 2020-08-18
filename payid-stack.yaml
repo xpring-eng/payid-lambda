@@ -198,8 +198,8 @@ Resources:
                       console.log('test account created');
                       response.send(event, context, response.SUCCESS, {});
                   }).catch((error) => {
-                      console.log(error);
-                      response.send(event, context, response.FAILURE, {});
+                      console.log('Cannot create the test account but proceeding', error);
+                      response.send(event, context, response.SUCCESS, {});
                   });
           };
       Description: "PayID Test Account Generator"
@@ -280,7 +280,7 @@ Resources:
               statusCode: 404,
           }
 
-          // From payid/services/headers.ts
+          // From payid/src/services/headers.ts
           // This will throw if the regex doesn't match.
           function parseAcceptHeader(acceptHeader) {
               const ACCEPT_HEADER_REGEX = /^(?:application\/)(?<paymentNetwork>\w+)-?(?<environment>\w+)?(?:\+json)$/u
