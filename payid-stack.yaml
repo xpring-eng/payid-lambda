@@ -264,7 +264,7 @@ Resources:
 
           const responseHeaders = {
               'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+              'Access-Control-Allow-Methods': 'GET, OPTIONS',
               'Access-Control-Allow-Headers': 'PayID-Version',
               'Access-Control-Expose-Headers': 'PayID-Version, PayID-Server-Version',
               'Cache-Control': 'no-store',
