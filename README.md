@@ -1,5 +1,7 @@
 # PayID via AWS Lambda
 
+_This project is not associated with PayID operated by NPP Australia Ltd. People in Australia are prohibited from using this project.  See below for more details._
+
 Ready to get started with your own PayID server on AWS Lambda?
 
 You'll need:
@@ -199,3 +201,7 @@ To perform an update, click the `Update` button when viewing the stack and uploa
 ![update button](./help-images/upgrade/update-form.png)
 
 Note: While this will update the Lambda function it could also update other resources as well in the stack, including API Gateway, S3, etc. We'll outline changes in the release notes if other resources are altered, but be sure to look at the changelog for indications that other resources may be impacted.
+
+## Legal
+
+By using, reproducing, or distributing this code, you agree to the terms and conditions for use (including the Limitation of Liability) in the [Apache License 2.0](https://github.com/payid-org/payid/blob/master/LICENSE). If you do not agree, you may not use, reproduce, or distribute the code. **This code is not authorised for download in Australia.  Any persons located in Australia are expressly prohibited from downloading, using, reproducing or distributing the code.**  This code is not owned by, or associated with, NPP Australia Limited, and has no sponsorship, affiliation or other connection with the “Pay ID” service operated by NPP Australia Limited in Australia.
