@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 
 const s3 = new AWS.S3();
 
-const allAddressesHeader = 'application/payid+json'
+const allAddressesHeader = 'application/payid+json';
 
 const responseHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,12 +19,12 @@ const successResponse = {
 
 const notFoundResponse = {
   statusCode: 404,
-}
+};
 
 // From payid/src/services/headers.ts
 // This will throw if the regex doesn't match.
 function parseAcceptHeader(acceptHeader) {
-  const ACCEPT_HEADER_REGEX = /^(?:application\/)(?<paymentNetwork>\w+)-?(?<environment>\w+)?(?:\+json)$/u
+  const ACCEPT_HEADER_REGEX = /^(?:application\/)(?<paymentNetwork>\w+)-?(?<environment>\w+)?(?:\+json)$/u;
   // TODO (tedkalaw): Support content negotiation?
   // From payid/services/headers.ts
   const lowerCaseMediaType = acceptHeader.toLowerCase();
@@ -36,7 +36,7 @@ function parseAcceptHeader(acceptHeader) {
       environment: regexResult.groups.environment.toUpperCase(),
     }),
     paymentNetwork: regexResult && regexResult.groups && regexResult.groups.paymentNetwork.toUpperCase(),
-  }
+  };
 }
 
 exports.handler =  async function(event, context) {
@@ -54,7 +54,7 @@ exports.handler =  async function(event, context) {
   }
 
   const payId = event.pathParameters.payId;
-  const fullPayId = `${payId}$${process.env.PAYID_DOMAIN}`
+  const fullPayId = `${payId}$${process.env.PAYID_DOMAIN}`;
 
   try {
     const params = {
@@ -63,6 +63,7 @@ exports.handler =  async function(event, context) {
     };
     const payIdResource = await s3.getObject(params).promise();
     const payIdJson = JSON.parse(payIdResource.Body.toString());
+    const verifiedAddresses = payIdJson.verifiedAddresses || [];
 
     const acceptHeader = event.headers.Accept;
     if (!acceptHeader || acceptHeader === allAddressesHeader) {
@@ -70,9 +71,10 @@ exports.handler =  async function(event, context) {
         ...successResponse,
         body: JSON.stringify({
           addresses: payIdJson.addresses,
+          verifiedAddresses: verifiedAddresses,
           payId: fullPayId
         })
-      }
+      };
     }
 
     const {paymentNetwork, environment} = parseAcceptHeader(acceptHeader);
@@ -82,17 +84,30 @@ exports.handler =  async function(event, context) {
         ...successResponse,
         body: JSON.stringify({
           addresses: payIdJson.addresses,
+          verifiedAddresses: verifiedAddresses,
           payId: fullPayId
         })
-      }
+      };
     }
 
     const selectedAddress = payIdJson.addresses
       .find(a => a.paymentNetwork === paymentNetwork
         && (!environment || a.environment === environment)
       );
+    var selectedVerifiedAddress = false;
 
-    if (!selectedAddress) {
+    for (var i = 0; i < verifiedAddresses.length; i++) {
+      var payload = JSON.parse(verifiedAddresses[i].payload);
+
+      if (payload) {
+        if (payload.payIdAddress.paymentNetwork === paymentNetwork
+            && (!environment || payload.payIdAddress.environment === environment)) {
+            selectedVerifiedAddress = verifiedAddresses[i];
+        }
+      }
+    }
+
+    if (!selectedAddress && !selectedVerifiedAddress) {
       return {
         ...notFoundResponse,
         body: JSON.stringify({
@@ -103,13 +118,14 @@ exports.handler =  async function(event, context) {
       };
     }
 
-    const addressFoundResponse = {...successResponse }
+    const addressFoundResponse = {...successResponse };
     addressFoundResponse.headers['Content-Type'] = acceptHeader;
 
     return {
       ...addressFoundResponse,
       body: JSON.stringify({
-        addresses: [selectedAddress],
+        addresses: ((typeof selectedAddress === 'object') ? [selectedAddress]: []),
+        verifiedAddresses: ((typeof selectedVerifiedAddress === 'object') ? [selectedVerifiedAddress]: []),
         payId: fullPayId
       })
     };
