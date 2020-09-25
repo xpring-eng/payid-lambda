@@ -458,6 +458,30 @@ Resources:
             DNSName: !GetAtt "apiGatewayCustomDomain.DistributionDomainName"
             HostedZoneId: !GetAtt "apiGatewayCustomDomain.DistributionHostedZoneId"
 
+  cloudwatchLogsLogGroupListCertificatesFn:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${listCertificatesFn}"
+      RetentionInDays: 7
+    DependsOn:
+      - listCertificatesFn
+
+  cloudwatchLogsLogGroupWriteTestAccountToS3Fn:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${writeTestAccountToS3Fn}"
+      RetentionInDays: 7
+    DependsOn:
+      - writeTestAccountToS3Fn
+
+  cloudwatchLogsLogGroupPayIdServerLambdaFunction:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${payIdServerLambdaFunction}"
+      RetentionInDays: 7
+    DependsOn:
+      - payIdServerLambdaFunction
+
 Outputs:
   apiGatewayBaseURL:
     Value: !Sub "https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/"
